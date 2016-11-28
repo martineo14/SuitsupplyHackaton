@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Suitsupply.SalesRep.API.DAL;
+using Microsoft.EntityFrameworkCore;
 
 namespace Suitsupply.SalesRep.API
 {
@@ -37,7 +39,16 @@ namespace Suitsupply.SalesRep.API
             // Add framework services.
             services.AddApplicationInsightsTelemetry(Configuration);
 
-            services.AddMvc();
+            services.AddMvc().AddJsonOptions(options => {
+                options.SerializerSettings.ReferenceLoopHandling =
+                    Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+            });
+
+            // DependencyInjection SaleRepresentativeRepository.
+            services.AddScoped<DAL.IRepository, DAL.SaleRepresentativeRepository>();
+
+            services.AddDbContext<SaleRepresentativeContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("SaleRepresentativeDatabase")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline
@@ -51,6 +62,9 @@ namespace Suitsupply.SalesRep.API
             app.UseApplicationInsightsExceptionTelemetry();
 
             app.UseMvc();
+
+            app.UseStaticFiles();
+
         }
     }
 }
